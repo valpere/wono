@@ -2,6 +2,8 @@ package Wono;
 
 use utf8;
 
+our $VERSION = 0.010;
+
 use Mouse;
 
 use Pod::Usage;

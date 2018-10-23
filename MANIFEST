@@ -1,0 +1,18 @@
+_internal/etc/perlcritic.conf
+_internal/etc/perltidy.conf
+_internal/lib/Perl/Critic/Policy/ValuesAndExpressions/ProhibitImplicitNewlinesQuote.pm
+_internal/lib/Perl/Critic/Policy/ValuesAndExpressions/ProhibitQuotedHashKey.pm
+_internal/lib/Perl/Critic/Policy/ValuesAndExpressions/ProhibitSmartmatch.pm
+_internal/lib/Perl/Critic/Policy/Variables/ProhibitUnusedVariables.pm
+lib/Wono.pm
+lib/Wono/Constants.pm
+lib/Wono/Driver.pm
+lib/Wono/Driver/SQL.pm
+lib/Wono/Logger.pm
+lib/Wono/SQLMaker.pm
+lib/Wono/Utils.pm
+LICENSE
+Makefile.PL
+MANIFEST			This list of files
+README.md
+t/00-load.t
