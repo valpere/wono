@@ -14,6 +14,8 @@ my @_CONSTANTS = qw(
     $SIGNAL_DIE
     $SIGNAL_WARN
     $SLEEP_BEFORE_RECONNECT
+    $MAX_RETRIES
+    $MAX_ATTEMPTS
 );
 
 my @_UTILS = qw(
@@ -37,13 +39,11 @@ my @_UTILS = qw(
     is_equal_bool
     to_array_ref
     flatten
-    array_diff
-    array_intersection
-    array_unique
-    array_minus
     generate_fake_id
-    base_name
-    this
+    copy_to_tmp_file
+    create_tmp_file
+    hash2array
+    array2hash
     entropy
     evenness
 );
@@ -73,17 +73,14 @@ my @_LOGGER = qw(
 );
 
 BEGIN {
-    use_ok('Wono::Constants', @_CONSTANTS);
-    use_ok('Wono::Utils', @_UTILS);
-    use_ok('Wono::Logger', @_LOGGER);
+    use_ok( 'Wono::Constants', @_CONSTANTS );
+    use_ok( 'Wono::Utils',     @_UTILS );
+    use_ok( 'Wono::Logger',    @_LOGGER );
     use_ok('Wono::SQLMaker');
     use_ok('Wono::Driver');
     use_ok('Wono::Driver::SQL');
     use_ok('Wono');
-};
-
-
-
+}
 
 #*****************************************************************************
 1;

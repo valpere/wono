@@ -13,7 +13,6 @@ WriteMakefile(
     #   'EXE_FILES'     => [ map "bin/$_", @bins ],
     'AUTHOR'    => 'Valentyn Solomko <Valentyn.Solomko@gmail.com>',
     'PREREQ_PM' => {
-        'B'                => 0,
         'Clone'            => 0,
         'Const::Fast'      => 0,
         'Cpanel::JSON::XS' => 0,
@@ -25,10 +24,12 @@ WriteMakefile(
         'File::Basename'   => 0,
         'File::Path'       => 0,
         'File::Spec'       => 0,
+        'File::Temp'       => 0,
         'FindBin'          => 0,
         'Getopt::Long'     => 0,
         'Hash::Merge'      => 0,
         'IO::File'         => 0,
+        'List::MoreUtils'  => 0,
         'Log::Log4perl'    => 0,
         'Mouse'            => 0,
         'Pod::Usage'       => 0,
@@ -41,4 +42,3 @@ WriteMakefile(
     },
     'clean' => { FILES => 'Wono-*' },
 );
-
