@@ -1,4 +1,7 @@
 package Wono::Logger;
+##############################################################################
+# Комерційна таємниця / Proprietary and confidential to PortaOne, Inc.
+##############################################################################
 
 #*****************************************************************************
 # The module Implements logging via <http://mschilli.github.io/log4perl>.
@@ -107,7 +110,7 @@ sub tracef {
         'trace',
         1,
         {
-            filter => \&_sprintf,
+            filter => \&_wono_sprintf,
             value  => \@_,
         }
     );
@@ -127,7 +130,7 @@ sub traced {
         'trace',
         1,
         {
-            filter => \&_dumper,
+            filter => \&_wono_dumper,
             value  => \@data,
         }
     );
@@ -159,7 +162,7 @@ sub debugf {
         'debug',
         1,
         {
-            filter => \&_sprintf,
+            filter => \&_wono_sprintf,
             value  => \@_,
         }
     );
@@ -179,7 +182,7 @@ sub debugd {
         'debug',
         1,
         {
-            filter => \&_dumper,
+            filter => \&_wono_dumper,
             value  => \@data,
         }
     );
@@ -199,7 +202,7 @@ sub debugdl {
         'debug',
         1,
         {
-            filter => \&_dumper_line,
+            filter => \&_wono_dumper_line,
             value  => \@data,
         }
     );
@@ -231,7 +234,7 @@ sub infof {
         'info',
         1,
         {
-            filter => \&_sprintf,
+            filter => \&_wono_sprintf,
             value  => \@_,
         }
     );
@@ -251,7 +254,7 @@ sub infod {
         'info',
         1,
         {
-            filter => \&_dumper,
+            filter => \&_wono_dumper,
             value  => \@data,
         }
     );
@@ -283,7 +286,7 @@ sub warningf {
         'warn',
         1,
         {
-            filter => \&_sprintf,
+            filter => \&_wono_sprintf,
             value  => \@_,
         }
     );
@@ -303,7 +306,7 @@ sub warningd {
         'warn',
         1,
         {
-            filter => \&_dumper,
+            filter => \&_wono_dumper,
             value  => \@data,
         }
     );
@@ -335,7 +338,7 @@ sub errorf {
         'error',
         1,
         {
-            filter => \&_sprintf,
+            filter => \&_wono_sprintf,
             value  => \@_,
         }
     );
@@ -355,7 +358,7 @@ sub errord {
         'error',
         1,
         {
-            filter => \&_dumper,
+            filter => \&_wono_dumper,
             value  => \@data,
         }
     );
@@ -387,7 +390,7 @@ sub fatalf {
         'logdie',
         1,
         {
-            filter => \&_sprintf,
+            filter => \&_wono_sprintf,
             value  => \@_,
         }
     );
@@ -407,7 +410,7 @@ sub fatald {
         'logdie',
         1,
         {
-            filter => \&_dumper,
+            filter => \&_wono_dumper,
             value  => \@data,
         }
     );
@@ -441,28 +444,28 @@ sub logger {
 }
 
 #*****************************************************************************
-sub _flat {
+sub _wono_flat {
     my ($args) = @_;
 
     return $args;
 }
 
 #*****************************************************************************
-sub _sprintf {
+sub _wono_sprintf {
     my ($args) = @_;
 
     return sprintf( shift( @{$args} ), @{ $args || [] } );
 }
 
 #*****************************************************************************
-sub _dumper {
+sub _wono_dumper {
     my ($args) = @_;
 
     return dump_data( @{ $args || [] } );
 }
 
 #*****************************************************************************
-sub _dumper_line {
+sub _wono_dumper_line {
     my ($args) = @_;
 
     my $data = dump_data( @{ $args || [] } );

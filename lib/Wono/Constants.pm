@@ -17,6 +17,9 @@ our @EXPORT_OK = qw(
     $SIGNAL_WARN
 
     $SLEEP_BEFORE_RECONNECT
+
+    $MAX_RETRIES
+    $MAX_ATTEMPTS
 );
 
 our %EXPORT_TAGS = ();
@@ -33,6 +36,9 @@ const our $SIGNAL_DIE  => '__DIE__';
 const our $SIGNAL_WARN => '__WARN__';
 
 const our $SLEEP_BEFORE_RECONNECT => 10;
+
+const our $MAX_RETRIES  => 10;
+const our $MAX_ATTEMPTS => 10;
 
 #*****************************************************************************
 1;

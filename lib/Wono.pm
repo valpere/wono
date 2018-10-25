@@ -13,7 +13,7 @@ use English qw(-no_match_vars);
 use Hash::Merge ();
 use File::Spec  ();
 use File::Path qw(make_path);
-use File::Basename qw(basename);
+use File::Basename ();
 use Digest::MD5 qw(md5_hex);
 
 # search for libs in module's directory
@@ -47,11 +47,21 @@ const my $_OPTIONS => [
     'man',
     'config|c=s',
     'data_dir|d=s',
+    'verbose|v',
+    'verbose_verbose|vv',
 ];
 
 const my $_META_NAME => 'metadata';
 
 #*****************************************************************************
+has 'basename' => (
+    is       => 'ro',
+    isa      => 'Str',
+    lazy     => 1,
+    builder  => '_build_basename',
+    init_arg => undef,
+);
+
 has 'name' => (
     is       => 'ro',
     isa      => 'Str',
@@ -82,6 +92,22 @@ has 'data_dir' => (
     isa      => 'Str',
     lazy     => 1,
     builder  => '_build_data_dir',
+    init_arg => undef,
+);
+
+has 'verbose' => (
+    is       => 'ro',
+    isa      => 'Bool',
+    lazy     => 1,
+    builder  => '_get_verbose',
+    init_arg => undef,
+);
+
+has 'verbose_verbose' => (
+    is       => 'ro',
+    isa      => 'Bool',
+    lazy     => 1,
+    builder  => '_get_verbose_verbose',
     init_arg => undef,
 );
 
@@ -229,13 +255,14 @@ sub initialize {
         pod2usage( -verbose => 1, -exitval => 2, -output => \*STDERR );
     }
 
-    my $basename = $self->name;
+    my $basename    = $self->basename;
+    my $config_name = $self->name;
 
     my $config_file = $params->{config};
     if ( !$config_file ) {
-        $config_file = File::Spec->catfile( File::Spec->curdir, $basename . '.conf' );
+        $config_file = File::Spec->catfile( File::Spec->curdir, $config_name . '.conf' );
         if ( !-e $config_file ) {
-            $config_file = File::Spec->catfile( $Bin, '..', 'etc', $basename . '.conf' );
+            $config_file = File::Spec->catfile( $Bin, '..', 'etc', $config_name . '.conf' );
         }
     }
 
@@ -270,10 +297,17 @@ sub this {
 }
 
 #*****************************************************************************
+sub _build_basename {
+    my ($self) = @_;
+
+    return lc( File::Basename::basename( $Script, '.pl' ) );
+}
+
+#*****************************************************************************
 sub _build_name {
     my ($self) = @_;
 
-    return lc( basename( $Script, '.pl' ) );
+    return $self->basename;
 }
 
 #*****************************************************************************
@@ -287,6 +321,20 @@ sub _build_data_dir {
     printf( "Data dir: %s\n", $data_dir );
 
     return $data_dir;
+}
+
+#*****************************************************************************
+sub _get_verbose {
+    my ($self) = @_;
+
+    return $self->params->{verbose} || $self->params->{verbose_verbose};
+}
+
+#*****************************************************************************
+sub _get_verbose_verbose {
+    my ($self) = @_;
+
+    return $self->params->{verbose_verbose};
 }
 
 #*****************************************************************************

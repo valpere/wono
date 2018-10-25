@@ -8,6 +8,9 @@ use Mouse;
 use FindBin qw($Bin);
 use lib( $Bin, "$Bin/.." );
 
+use Wono::Constants qw(
+    $SLEEP_BEFORE_RECONNECT
+);
 use Wono::Logger qw(
     debugd
     fatalf
@@ -21,26 +24,17 @@ has 'name' => (
     init_arg => undef,
 );
 
-#*****************************************************************************
-sub session_open {
-    my ($self) = @_;
+has 'verbose' => (
+    is      => 'ro',
+    isa     => 'Bool',
+    default => 0,
+);
 
-    return 1;
-}
-
-#*****************************************************************************
-sub session_close {
-    my ($self) = @_;
-
-    return 1;
-}
-
-#*****************************************************************************
-sub call {
-    my ( $self, $args ) = @_;
-
-    return fatalf( q{Method '%s' for '%s' is not implemented yet}, $self->this, $self->name );
-}
+has 'verbose_verbose' => (
+    is      => 'ro',
+    isa     => 'Bool',
+    default => 0,
+);
 
 #*****************************************************************************
 sub this {
@@ -50,6 +44,42 @@ sub this {
     $this =~ s/^.*:://;
 
     return $this;
+}
+
+#*****************************************************************************
+sub session_open {
+    my ($self) = @_;
+
+    return 0;
+}
+
+#*****************************************************************************
+sub session_close {
+    my ($self) = @_;
+
+    return 0;
+}
+
+#*****************************************************************************
+sub reconnect {
+    my ( $self, $retry ) = @_;
+
+    if ( !$self->session_close ) {
+        return 0;
+    }
+
+    if ($retry) {
+        sleep( $SLEEP_BEFORE_RECONNECT * $retry );
+    }
+
+    return $self->session_open;
+}
+
+#*****************************************************************************
+sub call {
+    my ( $self, $args ) = @_;
+
+    return fatalf( q{Method '%s' for '%s' is not implemented yet}, $self->this, $self->name );
 }
 
 #*****************************************************************************

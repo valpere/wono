@@ -1,4 +1,7 @@
 package Wono::SQLMaker;
+##############################################################################
+# Комерційна таємниця / Proprietary and confidential to PortaOne, Inc.
+##############################################################################
 
 use Mouse;
 
@@ -15,6 +18,10 @@ use lib( $Bin, "$Bin/.." );
 
 use Wono::Logger qw(
     debugd
+    debugdl
+);
+use List::MoreUtils qw(
+    uniq
 );
 
 #*****************************************************************************
@@ -24,7 +31,6 @@ const my $_QUOTE => {
     cassandra => '"',
 };
 
-#*****************************************************************************
 const my $_RESERVED_WORDS => {
     # https://docs.oracle.com/database/121/SQLRF/ap_keywd001.htm#SQLRF55621
     oracle => {
@@ -493,6 +499,11 @@ const my $_RESERVED_WORDS => {
     },
 };
 
+const my $_QUERIES => {
+    mysql  => {},
+    oracle => {},
+};
+
 #*****************************************************************************
 has 'dbd' => (
     is       => 'ro',
@@ -552,6 +563,29 @@ sub make_select {
 } ## end sub make_select
 
 #*****************************************************************************
+sub make_select_named {
+    my ( $self, $args ) = @_;
+
+    my ( $query, $object, $order_by, $limit, $offset )
+        = @{$args}{qw(query object order_by limit offset)};
+
+    $query =~ s/^#//;
+
+    $query = $_QUERIES->{ $self->dbd }->{$query};
+
+    my $sql = sprintf( '%s %s', $query, $self->_make_order_by($order_by) );
+
+    my $data = {};
+
+    my $fields = [ uniq( $query =~ m/:(\w+)/g ) ];
+    @{$data}{ @{$fields} } = @{$object}{ @{$fields} };
+
+    $sql = $self->_make_limit( $sql, $limit, $offset );
+
+    return ( $sql, $data );
+} ## end sub make_select_named
+
+#*****************************************************************************
 sub make_count {
     my ( $self, $args ) = @_;
 
@@ -587,6 +621,9 @@ sub make_insert {
     my @insert = ();
     my @values = ();
     for my $field ( @{$fields} ) {
+        if ( !exists( $object->{$field} ) ) {
+            next;
+        }
         push( @insert, $self->_quote_field($field) );
         push( @values, ':' . $field );
         $data->{$field} = $object->{$field};
@@ -919,7 +956,7 @@ sub _make_limit {
     }
 
     if ( $self->is_oracle ) {
-        return $offset
+        return ( defined $offset )
             ? sprintf(
             'SELECT * FROM ( SELECT lim1# .* , ROWNUM rnum1 FROM ( %s ) lim1# WHERE ROWNUM <= %d ) WHERE rnum1 > %d',
             $sql, $offset + $limit, $offset
@@ -927,7 +964,7 @@ sub _make_limit {
             : sprintf( 'SELECT lim1# .* FROM ( %s ) lim1# WHERE ROWNUM <= %d', $sql, $limit );
     }
     else {
-        return $offset
+        return ( defined $offset )
             ? sprintf( '%s LIMIT %d OFFSET %d', $sql, $limit, $offset )
             : sprintf( '%s LIMIT %d',           $sql, $limit );
     }

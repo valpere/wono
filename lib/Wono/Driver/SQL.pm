@@ -7,10 +7,12 @@ use Mouse;
 
 extends 'Wono::Driver';
 
+use English qw(-no_match_vars);
 use DBI;
 use Const::Fast;
 use Ref::Util qw(
     is_hashref
+    is_arrayref
 );
 
 # search for libs in module's directory
@@ -102,6 +104,15 @@ around BUILDARGS => sub {
 };
 
 #*****************************************************************************
+sub call {
+    my ( $self, $args ) = @_;
+
+    my ( $what, $sql, $data ) = @{$args}{qw(what sql data)};
+
+    return $self->$what( $sql, $data );
+}
+
+#*****************************************************************************
 sub begin {
     my ($self) = @_;
 
@@ -124,9 +135,9 @@ sub rollback {
 
 #**************************************************************************
 sub do_one {
-    my ( $self, $sql, $params ) = @_;
+    my ( $self, $sql, $params, $sprintf ) = @_;
 
-    ( $sql, $params ) = $self->_prepare_data( $sql, $params );
+    ( $sql, $params ) = $self->_prepare_data( $sql, $params, $sprintf );
 
     my $ret = $self->dbh->do( $sql, undef, @{$params} );
 
@@ -135,9 +146,9 @@ sub do_one {
 
 #**************************************************************************
 sub get_val {
-    my ( $self, $sql, $params ) = @_;
+    my ( $self, $sql, $params, $sprintf ) = @_;
 
-    ( $sql, $params ) = $self->_prepare_data( $sql, $params );
+    ( $sql, $params ) = $self->_prepare_data( $sql, $params, $sprintf );
 
     my $sth = $self->dbh->prepare($sql);
     $sth->execute( @{$params} );
@@ -149,9 +160,9 @@ sub get_val {
 
 #**************************************************************************
 sub get_one {
-    my ( $self, $sql, $params ) = @_;
+    my ( $self, $sql, $params, $sprintf ) = @_;
 
-    ( $sql, $params ) = $self->_prepare_data( $sql, $params );
+    ( $sql, $params ) = $self->_prepare_data( $sql, $params, $sprintf );
 
     my $sth = $self->dbh->prepare($sql);
     $sth->execute( @{$params} );
@@ -161,9 +172,9 @@ sub get_one {
 
 #**************************************************************************
 sub get_all {
-    my ( $self, $sql, $params ) = @_;
+    my ( $self, $sql, $params, $sprintf ) = @_;
 
-    ( $sql, $params ) = $self->_prepare_data( $sql, $params );
+    ( $sql, $params ) = $self->_prepare_data( $sql, $params, $sprintf );
 
     $self->dbh->{RaiseError} = 1;
 
@@ -197,9 +208,9 @@ sub table_exists {
 
 #**************************************************************************
 sub get_map {
-    my ( $self, $sql, $params ) = @_;
+    my ( $self, $sql, $params, $sprintf ) = @_;
 
-    ( $sql, $params ) = $self->_prepare_data( $sql, $params );
+    ( $sql, $params ) = $self->_prepare_data( $sql, $params, $sprintf );
 
     my $sth = $self->dbh->prepare($sql);
 
@@ -238,15 +249,17 @@ sub last_dbi_id {
 sub to_connect {
     my ($self) = @_;
 
-    # $dbh->{AutoCommit}       = 1;
-    # $dbh->{RaiseError}       = 1;
-    # $dbh->{FetchHashKeyName} = 'NAME_lc';
-    # $dbh->{LongReadLen} = 256 * 1024; # We're not expecting binary data of more than 256 KB
-
     my $dbh = DBI->connect( $self->dsn, $self->username, $self->password );
     if ( !$dbh ) {
         fatalf( '%s: %s', $DBI::errstr, $self->dsn );
     }
+
+    $dbh->{AutoCommit}       = 1;
+    $dbh->{RaiseError}       = 1;
+    $dbh->{FetchHashKeyName} = 'NAME_lc';
+
+    # We're not expecting binary data of more than 256 KB
+    $dbh->{LongReadLen} = 256 * 1024;
 
     return $dbh;
 }
@@ -281,7 +294,7 @@ sub session_close {
 
     $self->_set_dbh(undef);
 
-    return undef;
+    return 1;
 }
 
 #**************************************************************************
@@ -308,7 +321,11 @@ sub _build_tables {
 
 #**************************************************************************
 sub _prepare_data {
-    my ( $self, $sql, $params ) = @_;
+    my ( $self, $sql, $params, $sprintf ) = @_;
+
+    if ( is_arrayref($sprintf) ) {
+        $sql = sprintf( $sql, @{$sprintf} );
+    }
 
     my $values     = [];
     my $get_values = sub {
@@ -322,6 +339,34 @@ sub _prepare_data {
     $sql =~ s/:(\w+)/$get_values->($1)/ge;
 
     return ( $sql, $values );
+} ## end sub _prepare_data
+
+#*****************************************************************************
+sub is_oracle {
+    my ( $self, $args ) = @_;
+
+    return ( $self->dbd eq 'oracle' );
+}
+
+#*****************************************************************************
+sub is_mysql {
+    my ( $self, $args ) = @_;
+
+    return ( $self->dbd eq 'mysql' );
+}
+
+#*****************************************************************************
+sub is_cassandra {
+    my ( $self, $args ) = @_;
+
+    return ( $self->dbd eq 'cassandra' );
+}
+
+#*****************************************************************************
+sub is_sqlite {
+    my ( $self, $args ) = @_;
+
+    return ( $self->dbd eq 'sqlite' );
 }
 
 #*****************************************************************************

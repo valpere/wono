@@ -34,15 +34,14 @@ our @EXPORT_OK = qw(
 
     to_array_ref
     flatten
-    array_diff
-    array_intersection
-    array_unique
-    array_minus
 
     generate_fake_id
 
-    base_name
-    this
+    copy_to_tmp_file
+    create_tmp_file
+
+    hash2array
+    array2hash
 
     entropy
     evenness
@@ -75,6 +74,7 @@ use Const::Fast;
 use POSIX qw(UINT_MAX);
 use English qw(-no_match_vars);
 use IO::File;
+use File::Temp ();
 use Cpanel::JSON::XS;
 use Data::Dumper;
 use Ref::Util qw(
@@ -86,8 +86,6 @@ use Encode qw(
     decode_utf8
     is_utf8
 );
-use FindBin qw($Script);
-use File::Basename qw(basename);
 
 #*****************************************************************************
 const my $_RANDOM_RANGE => 100_000_000;
@@ -474,40 +472,6 @@ sub flatten {
 } ## end sub flatten
 
 #*****************************************************************************
-sub array_diff {
-    my ( $arr_1, $arr_2 ) = @_;
-
-    my %e = map { $_ => undef } @{$arr_2};
-
-    return [ ( grep { exists( $e{$_} ) ? ( delete $e{$_} ) : (1) } @{$arr_1} ), keys %e ];
-}
-
-#*****************************************************************************
-sub array_intersection {
-    my ( $arr_1, $arr_2 ) = @_;
-
-    my %e = map { $_ => undef } @{$arr_1};
-
-    return [ grep { exists( $e{$_} ) } @{$arr_2} ];
-}
-
-#*****************************************************************************
-sub array_unique {
-    my ($arr_1) = @_;
-
-    return [ keys %{ { map { $_ => undef } @{$arr_1} } } ];
-}
-
-#*****************************************************************************
-sub array_minus {
-    my ( $arr_1, $arr_2 ) = @_;
-
-    my %e = map { $_ => undef } @{$arr_2};
-
-    return [ grep { !exists( $e{$_} ) } @{$arr_1} ];
-}
-
-#*****************************************************************************
 sub generate_fake_id {
     return UINT_MAX- int( rand($_RANDOM_RANGE) );
 }
@@ -521,8 +485,31 @@ sub this {
 }
 
 #*****************************************************************************
-sub base_name {
-    return lc( basename( $Script, '.pl' ) );
+sub hash2array {
+    my ($hash) = @_;
+
+    my $array = [];
+    for my $name ( sort keys %{$hash} ) {
+        my $item = $hash->{$name};
+        $item->{name} = $name;
+
+        push( @{$array}, $item );
+    }
+
+    return $array;
+}
+
+#*****************************************************************************
+sub array2hash {
+    my ($array) = @_;
+
+    my %hash;
+    for my $item ( @{$array} ) {
+        my $name = delete( $item->{name} );
+        $hash{$name} = $item;
+    }
+
+    return \%hash;
 }
 
 #*****************************************************************************
@@ -539,6 +526,48 @@ sub evenness {
     my ( $entropy, $length ) = @_;
 
     return $entropy / log($length);
+}
+
+#*****************************************************************************
+sub copy_to_tmp_file {
+    my ( $file, $name_template ) = @_;
+
+    $name_template //= 'tmpfile_XXXX';
+
+    my $orig_key_fh = IO::File->new( $file, 'r' );
+    if ( !$orig_key_fh ) {
+        fatalf( 'Cannot open %s for reading', $file );
+    }
+
+    my ( $tmp_key_fh, $tmp_key ) = File::Temp::tempfile(
+        'id_dsa_XXXX', SUFFIX => '.key', DIR => '/tmp', UNLINK => 1, OPEN => 1,
+    );
+
+    if ( !$tmp_key_fh ) {
+        fatalf('Cannot create temp key file in /tmp');
+    }
+
+    while (<$orig_key_fh>) {
+        print {$tmp_key_fh} $_;
+    }
+
+    if ( !$orig_key_fh->close() && !$tmp_key_fh->close() ) {
+        fatalf('Impossible to close file handlers');
+    }
+    return $tmp_key;
+} ## end sub copy_to_tmp_file
+
+#*****************************************************************************
+sub create_tmp_file {
+    my ( $name, $dir ) = @_;
+
+    $dir //= '/tmp';
+    $name = ( $name // 'tmpfile' ) . '_XXXX';
+
+    my ( undef, $tmpfile ) = File::Temp::tempfile(
+        $name, DIR => $dir, UNLINK => 0, OPEN => 0,
+    );
+    return $tmpfile;
 }
 
 #*****************************************************************************
