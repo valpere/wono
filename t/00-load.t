@@ -4,7 +4,7 @@ package t_00_load;
 use strict;
 use warnings 'all';
 
-use Test::More tests => 7;
+use Test::More tests => 8;
 
 use lib '../lib';
 
@@ -79,6 +79,7 @@ BEGIN {
     use_ok('Wono::SQLMaker');
     use_ok('Wono::Driver');
     use_ok('Wono::Driver::SQL');
+    use_ok('Wono::Driver::Tomcat8');
     use_ok('Wono');
 }
 
