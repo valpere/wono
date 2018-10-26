@@ -140,7 +140,7 @@ sub call {
     }
 
     if ( !$response->is_success() ) {
-        fatalf( 'Exception: %s, Description: %s', $response->code, $response->status_line );
+        die( sprintf( 'Exception: %s, Description: %s', $response->code, $response->status_line ) . "\n" );
     }
 
     if ( $response->code == HTTP_NO_CONTENT ) {
