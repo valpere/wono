@@ -34,6 +34,8 @@ use Wono::Utils qw(
 use Wono::Logger qw(
     init_logger
     logger
+    debug
+    debugf
     debugd
     info
     infof
@@ -117,7 +119,7 @@ sub run {
 
     $self->initialize( $params, $opts );
     debugd( { config => $self->params, } );
-    infof('Initialize done');
+    debugf('Initialize done');
 
     local $SIG{TERM}         = sub { $self->on_term(@_); };
     local $SIG{INT}          = sub { $self->on_term(@_); };
@@ -155,7 +157,7 @@ sub run {
 sub on_term {
     my ( $self, $sig ) = @_;
 
-    infof( '%s: %s', $sig, $OS_ERROR );
+    debugf( '%s: %s', $sig, $OS_ERROR );
 
     if ( $self->in_request() ) {
         $self->to_finalize($sig);
@@ -195,7 +197,7 @@ sub on_warn {
     if ( !$EXCEPTIONS_BEING_CAUGHT ) {
         # we are not inside eval
         # to avoid ERROR: Can't locate object method "tid" via package "threads" at /usr/share/perl5/XSLoader.pm
-        logger( 'info', 2, join( ' ', @params ) );
+        logger( 'debug', 2, join( ' ', @params ) );
     }
 
     return undef;
